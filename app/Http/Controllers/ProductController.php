@@ -9,7 +9,18 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::latest()->paginate(10);
+        if (auth()->user()->role == 'owner') {
+
+            $products = Product::latest()->paginate(10);
+
+        } else {
+
+            $products = Product::where(
+                'branch_id',
+                auth()->user()->branch_id
+            )->latest()->paginate(10);
+
+        }
 
         return view('products.index', compact('products'));
     }
@@ -36,6 +47,7 @@ class ProductController extends Controller
         }
 
         Product::create([
+            'branch_id' => auth()->user()->branch_id,
             'name' => $request->name,
             'barcode' => $request->barcode,
             'stock' => $request->stock,
@@ -50,11 +62,25 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        if (
+            auth()->user()->role != 'owner' &&
+            $product->branch_id != auth()->user()->branch_id
+        ) {
+            abort(403);
+        }
+
         return view('products.edit', compact('product'));
     }
 
     public function update(Request $request, Product $product)
     {
+        if (
+            auth()->user()->role != 'owner' &&
+            $product->branch_id != auth()->user()->branch_id
+        ) {
+            abort(403);
+        }
+
         $image = $product->image;
 
         if ($request->hasFile('image')) {
@@ -78,6 +104,13 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if (
+            auth()->user()->role != 'owner' &&
+            $product->branch_id != auth()->user()->branch_id
+        ) {
+            abort(403);
+        }
+
         $product->delete();
 
         return back()

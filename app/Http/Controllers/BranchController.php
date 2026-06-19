@@ -23,18 +23,51 @@ class BranchController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'address' => 'required',
             'city' => 'required',
+            'address' => 'required',
         ]);
 
         Branch::create([
             'name' => $request->name,
-            'address' => $request->address,
             'city' => $request->city,
+            'address' => $request->address,
         ]);
 
         return redirect()
             ->route('branches.index')
             ->with('success', 'Cabang berhasil ditambahkan');
+    }
+
+    public function edit(Branch $branch)
+    {
+        return view('branches.edit', compact('branch'));
+    }
+
+    public function update(Request $request, Branch $branch)
+    {
+        $request->validate([
+            'name' => 'required',
+            'city' => 'required',
+            'address' => 'required',
+        ]);
+
+        $branch->update([
+            'name' => $request->name,
+            'city' => $request->city,
+            'address' => $request->address,
+        ]);
+
+        return redirect()
+            ->route('branches.index')
+            ->with('success', 'Cabang berhasil diupdate');
+    }
+
+    public function destroy(Branch $branch)
+    {
+        $branch->delete();
+
+        return redirect()
+            ->route('branches.index')
+            ->with('success', 'Cabang berhasil dihapus');
     }
 }

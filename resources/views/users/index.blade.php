@@ -1,135 +1,129 @@
 <x-app-layout>
 
-<div class="p-8">
+    <div class="p-8">
 
-    <div class="flex justify-between items-center mb-8">
+        <div class="flex justify-between items-center mb-8">
 
-        <div>
+            <div>
 
-            <h1 class="text-3xl font-bold">
+                <h1 class="text-3xl font-bold">
 
-                Kelola User
+                    Kelola User
 
-            </h1>
+                </h1>
 
-            <p class="text-gray-500">
+                <p class="text-gray-500">
 
-                Manajemen pengguna aplikasi
+                    Manajemen pengguna aplikasi
 
-            </p>
+                </p>
 
-        </div>
+            </div>
 
-        <a
-            href="{{ route('users.create') }}"
-            class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-xl">
+            <a href="{{ route('users.create') }}" class="bg-emerald-600 text-white px-5 py-3 rounded-xl">
 
-            + Tambah User
+                + Tambah User
 
-        </a>
-
-    </div>
-
-    @if(session('success'))
-
-        <div class="bg-green-100 text-green-700 p-4 rounded-xl mb-5">
-
-            {{ session('success') }}
+            </a>
 
         </div>
 
-    @endif
+        @if(session('success'))
 
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
+            <div class="bg-green-100 text-green-700 p-4 rounded-xl mb-5">
 
-        <table class="w-full">
+                {{ session('success') }}
 
-            <thead class="bg-gray-100">
+            </div>
 
-                <tr>
+        @endif
 
-                    <th class="p-4 text-left">Nama</th>
-                    <th class="p-4 text-left">Email</th>
-                    <th class="p-4 text-left">Role</th>
-                    <th class="p-4 text-left">Cabang</th>
-                    <th class="p-4 text-left">Aksi</th>
+        <div class="bg-white rounded-2xl shadow overflow-hidden">
 
-                </tr>
+            <table class="w-full">
 
-            </thead>
+                <thead class="bg-gray-100">
 
-            <tbody>
+                    <tr>
 
-                @foreach($users as $user)
+                        <th class="p-4 text-left">Nama</th>
+                        <th class="p-4 text-left">Email</th>
+                        <th class="p-4 text-left">Role</th>
+                        <th class="p-4 text-left">Cabang</th>
+                        <th class="p-4 text-left">Aksi</th>
 
-                <tr class="border-t">
+                    </tr>
 
-                    <td class="p-4">
+                </thead>
 
-                        {{ $user->name }}
+                <tbody>
 
-                    </td>
+                    @foreach($users as $user)
 
-                    <td class="p-4">
+                        <tr class="border-t">
 
-                        {{ $user->email }}
+                            <td class="p-4">
 
-                    </td>
+                                {{ $user->name }}
 
-                    <td class="p-4">
+                            </td>
 
-                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                            <td class="p-4">
 
-                            {{ $user->role }}
+                                {{ $user->email }}
 
-                        </span>
+                            </td>
 
-                    </td>
+                            <td class="p-4">
 
-                    <td class="p-4">
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
 
-                        {{ $user->branch->name ?? '-' }}
+                                    {{ $user->role }}
 
-                    </td>
+                                </span>
 
-                    <td class="p-4 flex gap-2">
+                            </td>
 
-                        <a
-                            href="{{ route('users.edit', $user->id) }}"
-                            class="bg-yellow-400 text-white px-4 py-2 rounded-lg">
+                            <td class="p-4">
 
-                            Edit
+                                {{ $user->branch->name ?? '-' }}
 
-                        </a>
+                            </td>
 
-                        <form
-                            action="{{ route('users.destroy', $user->id) }}"
-                            method="POST">
+                            <td class="p-4 flex gap-2">
 
-                            @csrf
-                            @method('DELETE')
+                                <a href="{{ route('users.edit', $user->id) }}"
+                                    class="bg-yellow-400 text-white px-4 py-2 rounded-lg">
 
-                            <button
-                                class="bg-red-500 text-white px-4 py-2 rounded-lg">
+                                    Edit
 
-                                Hapus
+                                </a>
 
-                            </button>
+                                <form action="{{ route('users.destroy', $user->id) }}" method="POST">
 
-                        </form>
+                                    @csrf
+                                    @method('DELETE')
 
-                    </td>
+                                    <button class="bg-red-500 text-white px-4 py-2 rounded-lg">
 
-                </tr>
+                                        Hapus
 
-                @endforeach
+                                    </button>
 
-            </tbody>
+                                </form>
 
-        </table>
+                            </td>
+
+                        </tr>
+
+                    @endforeach
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
-
-</div>
 
 </x-app-layout>

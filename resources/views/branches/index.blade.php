@@ -10,7 +10,7 @@
 
             </h1>
 
-            <a href="{{ route('branches.create') }}" class="bg-blue-500 text-white px-5 py-3 rounded-xl">
+            <a href="{{ route('branches.create') }}" class=" bg-emerald-600 text-white px-5 py-3 rounded-xl">
 
                 + Tambah Cabang
 

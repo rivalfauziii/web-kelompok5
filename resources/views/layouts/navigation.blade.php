@@ -10,7 +10,7 @@
         </h1>
 
         <p class="text-slate-400 text-sm mt-1">
-            Smart Minimarket System
+            Smart Minimarket Syste
         </p>
 
     </div>

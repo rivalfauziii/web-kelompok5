@@ -8,6 +8,7 @@ use App\Http\Controllers\CashierController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,9 +17,7 @@ use App\Http\Controllers\BranchController;
 */
 
 Route::get('/', function () {
-
     return redirect('/dashboard');
-
 });
 
 /*
@@ -29,11 +28,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get(
-        '/dashboard',
-        [DashboardController::class, 'index']
-    )->name('dashboard');
-
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 });
 
 /*
@@ -42,33 +38,11 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([
-    'auth',
-    'role:owner'
-])->group(function () {
+Route::middleware(['auth', 'role:owner'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | USERS
-    |--------------------------------------------------------------------------
-    */
+    Route::resource('users', UserController::class);
 
-    Route::resource(
-        'users',
-        UserController::class
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | BRANCHES
-    |--------------------------------------------------------------------------
-    */
-
-    Route::resource(
-        'branches',
-        BranchController::class
-    );
-
+    Route::resource('branches', BranchController::class);
 });
 
 /*
@@ -77,22 +51,9 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([
-    'auth',
-    'role:owner,manager'
-])->group(function () {
+Route::middleware(['auth', 'role:owner,manager'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCTS
-    |--------------------------------------------------------------------------
-    */
-
-    Route::resource(
-        'products',
-        ProductController::class
-    );
-
+    Route::resource('products', ProductController::class);
 });
 
 /*
@@ -101,78 +62,55 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([
-    'auth',
-    'role:owner,manager,warehouse'
-])->group(function () {
+Route::middleware(['auth', 'role:owner,manager,warehouse'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | STOCKS
-    |--------------------------------------------------------------------------
-    */
-
-    Route::resource(
-        'stocks',
-        StockController::class
-    )->only([
-        'index',
-        'create',
-        'store'
-    ]);
-
+    Route::resource('stocks', StockController::class)
+        ->only(['index', 'create', 'store']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| OWNER + CASHIER
+| CASHIER
 |--------------------------------------------------------------------------
 */
+
+Route::middleware(['auth', 'role:owner,cashier'])->group(function () {
+
+    Route::get('/cashier', [CashierController::class, 'index'])
+        ->name('cashier.index');
+
+    Route::post('/cashier/checkout', [CashierController::class, 'checkout'])
+        ->name('cashier.checkout');
+});
 
 /*
 |--------------------------------------------------------------------------
-| OWNER + CASHIER
+| TRANSACTIONS
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([
-    'auth',
-    'role:owner,cashier'
-])->group(function () {
+Route::middleware(['auth', 'role:owner,manager,supervisor,cashier'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | CASHIER
-    |--------------------------------------------------------------------------
-    */
+    Route::get('/transactions', [CashierController::class, 'history'])
+        ->name('transactions.history');
 
-    Route::get(
-        '/cashier',
-        [CashierController::class, 'index']
-    )->name('cashier.index');
+    Route::get('/transactions/{id}', [CashierController::class, 'show'])
+        ->name('transactions.show');
+});
 
-    // INI CHECKOUT
-    Route::post(
-        '/cashier/checkout',
-        [CashierController::class, 'checkout']
-    )->name('cashier.checkout');
+/*
+|--------------------------------------------------------------------------
+| REPORTS
+|--------------------------------------------------------------------------
+*/
 
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTIONS
-    |--------------------------------------------------------------------------
-    */
+Route::middleware(['auth', 'role:owner,manager,supervisor,warehouse'])->group(function () {
 
-    Route::get(
-        '/transactions',
-        [CashierController::class, 'history']
-    )->name('transactions.history');
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
 
-    Route::get(
-        '/transactions/{id}',
-        [CashierController::class, 'show']
-    )->name('transactions.show');
-
+    Route::get('/reports/download/pdf', [ReportController::class, 'downloadPdf'])
+        ->name('reports.download.pdf');
 });
 
 /*
@@ -181,23 +119,16 @@ Route::middleware([
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    Route::get(
-        '/profile',
-        [ProfileController::class, 'edit']
-    )->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
 
-    Route::patch(
-        '/profile',
-        [ProfileController::class, 'update']
-    )->name('profile.update');
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
 
-    Route::delete(
-        '/profile',
-        [ProfileController::class, 'destroy']
-    )->name('profile.destroy');
-
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 });
 
 /*

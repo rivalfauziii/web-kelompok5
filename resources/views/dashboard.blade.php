@@ -1,313 +1,227 @@
 <x-app-layout>
 
+    @php
+        $role = auth()->user()->role;
+    @endphp
+
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
 
-        <!-- TOP HEADER -->
+        {{-- TOP HEADER --}}
         <div class="flex justify-between items-center mb-10">
 
             <div>
-
                 <h1 class="text-5xl font-black text-gray-800 dark:text-white">
-
                     Dashboard
-
                 </h1>
 
                 <p class="text-gray-500 mt-2 text-lg">
-
                     Welcome back, {{ auth()->user()->name }} 👋
-
                 </p>
-
             </div>
 
             <div class="bg-white dark:bg-gray-800 px-6 py-4 rounded-3xl shadow-lg">
-
-                <p class="text-gray-500 text-sm">
-
-                    Today
-
-                </p>
-
+                <p class="text-gray-500 text-sm">Today</p>
                 <h2 class="font-bold text-xl">
-
                     {{ now()->format('d M Y') }}
-
                 </h2>
-
             </div>
 
         </div>
-        <div class="mb-5 flex items-center gap-3">
+
+        {{-- ROLE BADGE --}}
+        <div class="mb-6 flex gap-3 items-center">
 
             <span class="bg-blue-100 text-blue-700 px-4 py-2 rounded-full font-semibold">
-                {{ strtoupper(auth()->user()->role) }}
+                {{ strtoupper($role) }}
             </span>
 
             @if(auth()->user()->branch)
-
                 <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold">
                     {{ auth()->user()->branch->name }}
                 </span>
+            @endif
+
+        </div>
+
+        {{-- ================= CARD SECTION ================= --}}
+
+        <div class="grid gap-8 mb-10">
+
+            {{-- OWNER / MANAGER --}}
+            @if(in_array($role, ['owner', 'manager']))
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+
+                    {{-- PRODUCT --}}
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-700 p-8 rounded-3xl text-white">
+                        <p>Total Produk</p>
+                        <h2 class="text-4xl font-bold">{{ $totalProducts }}</h2>
+                    </div>
+
+                    {{-- TRANSACTION --}}
+                    <div class="bg-gradient-to-r from-green-500 to-green-700 p-8 rounded-3xl text-white">
+                        <p>Total Transaksi</p>
+                        <h2 class="text-4xl font-bold">{{ $totalTransactions }}</h2>
+                    </div>
+
+                    {{-- SALES --}}
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-700 p-8 rounded-3xl text-white">
+                        <p>Total Penjualan</p>
+                        <h2 class="text-2xl font-bold">
+                            Rp {{ number_format($totalSales, 0, ',', '.') }}
+                        </h2>
+                    </div>
+
+                    {{-- STOCK --}}
+                    <div class="bg-gradient-to-r from-red-500 to-red-700 p-8 rounded-3xl text-white">
+                        <p>Stock Menipis</p>
+                        <h2 class="text-4xl font-bold">{{ $lowStocks }}</h2>
+                    </div>
+
+                </div>
+
+            @endif
+
+            {{-- SUPERVISOR --}}
+            @if($role == 'supervisor')
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Total Transaksi</p>
+                        <h2 class="text-4xl font-bold">{{ $totalTransactions }}</h2>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Total Penjualan</p>
+                        <h2 class="text-3xl font-bold">
+                            Rp {{ number_format($totalSales, 0, ',', '.') }}
+                        </h2>
+                    </div>
+
+                </div>
+
+            @endif
+
+            {{-- WAREHOUSE --}}
+            @if($role == 'warehouse')
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Total Produk</p>
+                        <h2 class="text-4xl font-bold">{{ $totalProducts }}</h2>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Stock Menipis</p>
+                        <h2 class="text-4xl font-bold text-red-500">{{ $lowStocks }}</h2>
+                    </div>
+
+                </div>
+
+            @endif
+
+            {{-- CASHIER --}}
+            @if($role == 'cashier')
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Total Transaksi</p>
+                        <h2 class="text-4xl font-bold">{{ $totalTransactions }}</h2>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl shadow">
+                        <p>Penjualan Hari Ini</p>
+                        <h2 class="text-3xl font-bold">
+                            Rp {{ number_format($todaySales, 0, ',', '.') }}
+                        </h2>
+                    </div>
+
+                </div>
 
             @endif
 
         </div>
-        <!-- CARD -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-10">
 
-            <!-- CARD -->
-            <div
-                class="bg-gradient-to-r from-blue-500 to-blue-700 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
+        {{-- ================= CHART & BEST SELLER ================= --}}
 
-                <div class="absolute right-5 top-5 text-7xl opacity-10">
+        @if(in_array($role, ['owner', 'manager', 'supervisor']))
 
-                    📦
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
-                </div>
+                {{-- CHART --}}
+                <div class="xl:col-span-2 bg-white p-8 rounded-3xl shadow">
 
-                <p class="text-blue-100 text-lg">
+                    <h2 class="text-2xl font-bold mb-5">Sales Analytics</h2>
 
-                    Total Produk
-
-                </p>
-
-                <h2 class="text-5xl font-black mt-4">
-
-                    {{ $totalProducts }}
-
-                </h2>
-
-            </div>
-
-            <!-- CARD -->
-            <div
-                class="bg-gradient-to-r from-green-500 to-green-700 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
-
-                <div class="absolute right-5 top-5 text-7xl opacity-10">
-
-                    🛒
-
-                </div>
-
-                <p class="text-green-100 text-lg">
-
-                    Total Transaksi
-
-                </p>
-
-                <h2 class="text-5xl font-black mt-4">
-
-                    {{ $totalTransactions }}
-
-                </h2>
-
-            </div>
-
-            <!-- CARD -->
-            <div
-                class="bg-gradient-to-r from-purple-500 to-purple-700 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
-
-                <div class="absolute right-5 top-5 text-7xl opacity-10">
-
-                    💰
-
-                </div>
-
-                <p class="text-purple-100 text-lg">
-
-                    Total Penjualan
-
-                </p>
-
-                <h2 class="text-3xl font-black mt-4">
-
-                    Rp {{ number_format($totalSales, 0, ',', '.') }}
-
-                </h2>
-
-            </div>
-
-            <!-- CARD -->
-            <div
-                class="bg-gradient-to-r from-red-500 to-red-700 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
-
-                <div class="absolute right-5 top-5 text-7xl opacity-10">
-
-                    ⚠️
-
-                </div>
-
-                <p class="text-red-100 text-lg">
-
-                    Stock Menipis
-
-                </p>
-
-                <h2 class="text-5xl font-black mt-4">
-
-                    {{ $lowStocks }}
-
-                </h2>
-
-            </div>
-
-        </div>
-
-        <!-- CONTENT -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-
-            <!-- CHART -->
-            <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
-
-                <div class="flex justify-between items-center mb-8">
-
-                    <div>
-
-                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-
-                            Sales Analytics
-
-                        </h2>
-
-                        <p class="text-gray-500 mt-1">
-
-                            Statistik penjualan 7 hari terakhir
-
-                        </p>
-
-                    </div>
-
-                    <div class="bg-blue-100 text-blue-600 px-5 py-2 rounded-2xl font-bold">
-
-                        Realtime
-
+                    <div class="h-96 relative">
+                        <canvas id="salesChart"></canvas>
                     </div>
 
                 </div>
 
-                <div class="h-96">
+                {{-- BEST SELLER --}}
+                <div class="bg-white p-8 rounded-3xl shadow">
 
-                    <canvas id="salesChart"></canvas>
+                    <h2 class="text-2xl font-bold mb-5">Best Seller</h2>
 
-                </div>
+                    <div class="space-y-4">
 
-            </div>
+                        @foreach($bestProducts as $item)
 
-            <!-- BEST PRODUCT -->
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
-
-                <div class="flex justify-between items-center mb-8">
-
-                    <div>
-
-                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-
-                            Best Seller
-
-                        </h2>
-
-                        <p class="text-gray-500 mt-1">
-
-                            Produk terlaris
-
-                        </p>
-
-                    </div>
-
-                    <div class="text-4xl">
-                        🔥
-                    </div>
-
-                </div>
-
-                <div class="space-y-5">
-
-                    @foreach($bestProducts as $item)
-
-                        <div class="bg-gray-100 dark:bg-gray-700 p-5 rounded-2xl">
-
-                            <div class="flex justify-between items-center">
-
+                            <div class="p-4 bg-gray-100 rounded-2xl flex justify-between">
                                 <div>
-
-                                    <h2 class="font-bold text-lg text-gray-800 dark:text-white">
-
+                                    <p class="font-bold">
                                         {{ $item->product->name ?? '-' }}
-
-                                    </h2>
-
-                                    <p class="text-gray-500 text-sm">
-
-                                        Total Terjual
-
                                     </p>
-
                                 </div>
 
-                                <div class="bg-green-500 text-white px-4 py-2 rounded-xl font-bold">
-
+                                <span class="bg-green-500 text-white px-3 py-1 rounded-xl">
                                     {{ $item->total_qty }}
-
-                                </div>
-
+                                </span>
                             </div>
 
-                        </div>
+                        @endforeach
 
-                    @endforeach
+                    </div>
 
                 </div>
 
             </div>
 
-        </div>
+        @endif
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- CHART --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
+<script>
+    const labels = @json($salesChart->pluck('date'));
+    const data = @json($salesChart->pluck('total'));
 
-        const ctx = document.getElementById('salesChart');
+    const ctx = document.getElementById('salesChart');
 
+    if (ctx && labels.length) {
         new Chart(ctx, {
-
             type: 'line',
-
             data: {
-
-                labels: [
-                    @foreach($salesChart as $chart)
-                        '{{ $chart->date }}',
-                    @endforeach
-        ],
-
+                labels: labels,
                 datasets: [{
-
                     label: 'Penjualan',
-
-                    data: [
-                        @foreach($salesChart as $chart)
-                            {{ $chart->total }},
-                        @endforeach
-            ],
-
-                    borderWidth: 4,
-                    tension: 0.4,
-                    fill: true
-
+                    data: data,
+                    borderWidth: 3,
+                    tension: 0.4
                 }]
             },
-
             options: {
-
+                responsive: true,
                 maintainAspectRatio: false
-
             }
-
         });
-
-    </script>
+    }
+</script>
 
 </x-app-layout>

@@ -11,19 +11,41 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalProducts = Product::count();
+        $user = auth()->user();
 
-        $totalTransactions = Transaction::count();
+        $productQuery = Product::query();
+        $transactionQuery = Transaction::query();
 
-        $totalSales = Transaction::sum('total');
+        if ($user->role !== 'owner') {
+            $productQuery->where('branch_id', $user->branch_id);
+            $transactionQuery->where('branch_id', $user->branch_id);
+        }
 
-        $lowStocks = Product::where('stock', '<=', 5)
+        /*
+        |--------------------------------------------------------------------------
+        | STATS
+        |--------------------------------------------------------------------------
+        */
+
+        $totalProducts = (clone $productQuery)->count();
+
+        $totalTransactions = (clone $transactionQuery)->count();
+
+        $totalSales = (clone $transactionQuery)->sum('total');
+
+        $lowStocks = (clone $productQuery)
+            ->where('stock', '<=', 5)
             ->count();
 
-        $todaySales = Transaction::whereDate(
-            'created_at',
-            today()
-        )->sum('total');
+        $todaySales = (clone $transactionQuery)
+            ->whereDate('created_at', today())
+            ->sum('total');
+
+        /*
+        |--------------------------------------------------------------------------
+        | BEST PRODUCTS
+        |--------------------------------------------------------------------------
+        */
 
         $bestProducts = TransactionDetail::selectRaw(
             'product_id, SUM(qty) as total_qty'
@@ -33,10 +55,18 @@ class DashboardController extends Controller
             ->orderByDesc('total_qty')
             ->take(5)
             ->get();
-        $salesChart = Transaction::select(
-            DB::raw('DATE(created_at) as date'),
-            DB::raw('SUM(total) as total')
-        )
+
+        /*
+        |--------------------------------------------------------------------------
+        | SALES CHART
+        |--------------------------------------------------------------------------
+        */
+
+        $salesChart = $transactionQuery
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(total) as total')
+            )
             ->groupBy('date')
             ->orderBy('date')
             ->take(7)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,17 @@ class CashierController extends Controller
 {
     public function index()
     {
-        $products = Product::all();
+        if (auth()->user()->role == 'owner') {
+
+            $products = Product::all();
+
+        } else {
+
+            $products = Product::where(
+                'branch_id',
+                auth()->user()->branch_id
+            )->get();
+        }
 
         return view('cashier.index', compact('products'));
     }
@@ -53,9 +64,30 @@ class CashierController extends Controller
                     'subtotal' => $subtotal,
                 ]);
 
-                $product = Product::find($item['id']);
+                $product = Product::findOrFail($item['id']);
+
+                if ($product->stock < $item['qty']) {
+
+                    throw new \Exception(
+                        'Stock ' . $product->name . ' tidak mencukupi'
+                    );
+                }
 
                 $product->decrement('stock', $item['qty']);
+
+                StockMovement::create([
+
+                    'product_id' => $product->id,
+
+                    'user_id' => auth()->id(),
+
+                    'type' => 'out',
+
+                    'qty' => $item['qty'],
+
+                    'notes' => 'Penjualan Invoice ' . $transaction->invoice,
+
+                ]);
             }
 
             DB::commit();
@@ -74,19 +106,60 @@ class CashierController extends Controller
             ]);
         }
     }
-    public function history()
+    public function history(Request $request)
     {
-        $transactions = Transaction::latest()->paginate(10);
+        if (auth()->user()->role == 'owner') {
+
+            $transactions = Transaction::with('branch');
+
+            if ($request->branch_id) {
+
+                $transactions->where(
+                    'branch_id',
+                    $request->branch_id
+                );
+            }
+
+            $transactions = $transactions
+                ->latest()
+                ->paginate(10);
+
+            $branches = \App\Models\Branch::all();
+
+        } else {
+
+            $transactions = Transaction::with('branch')
+                ->where(
+                    'branch_id',
+                    auth()->user()->branch_id
+                )
+                ->latest()
+                ->paginate(10);
+
+            $branches = collect();
+        }
 
         return view(
             'cashier.history',
-            compact('transactions')
+            compact(
+                'transactions',
+                'branches'
+            )
         );
     }
     public function show($id)
     {
-        $transaction = Transaction::with('details.product')
-            ->findOrFail($id);
+        $transaction = Transaction::with(
+            'details.product'
+        )->findOrFail($id);
+
+        if (
+            auth()->user()->role != 'owner'
+            &&
+            $transaction->branch_id != auth()->user()->branch_id
+        ) {
+            abort(403);
+        }
 
         return view(
             'cashier.show',

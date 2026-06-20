@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        if (auth()->user()->role == 'owner') {
+        $query = Product::with('branch');
 
-            $products = Product::latest()->paginate(10);
-
-        } else {
-
-            $products = Product::where(
-                'branch_id',
-                auth()->user()->branch_id
-            )->latest()->paginate(10);
-
+        if (auth()->user()->role != 'owner') {
+            $query->where('branch_id', auth()->user()->branch_id);
         }
 
-        return view('products.index', compact('products'));
+        if ($request->branch_id) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        $products = $query->latest()->paginate(10);
+        $branches = Branch::all();
+
+        return view('products.index', compact('products', 'branches'));
     }
 
     public function create()
@@ -41,17 +42,16 @@ class ProductController extends Controller
         $image = null;
 
         if ($request->hasFile('image')) {
-
             $image = $request->file('image')
                 ->store('products', 'public');
         }
 
         Product::create([
-            'branch_id' => auth()->user()->branch_id,
+            'branch_id' => $request->branch_id,
             'name' => $request->name,
             'barcode' => $request->barcode,
-            'stock' => $request->stock,
             'price' => $request->price,
+            'stock' => $request->stock,
             'image' => $image
         ]);
 
@@ -84,16 +84,16 @@ class ProductController extends Controller
         $image = $product->image;
 
         if ($request->hasFile('image')) {
-
             $image = $request->file('image')
                 ->store('products', 'public');
         }
 
         $product->update([
+            'branch_id' => $request->branch_id,
             'name' => $request->name,
             'barcode' => $request->barcode,
-            'stock' => $request->stock,
             'price' => $request->price,
+            'stock' => $request->stock,
             'image' => $image
         ]);
 

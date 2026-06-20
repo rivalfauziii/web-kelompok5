@@ -8,15 +8,78 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    public function index()
-    {
-        $stocks = StockMovement::latest()
-            ->paginate(10);
 
-        return view(
-            'stocks.index',
-            compact('stocks')
-        );
+    public function index(Request $request)
+    {
+        $query = Product::with('branch');
+
+        if (auth()->user()->role != 'owner') {
+
+            $query->where(
+                'branch_id',
+                auth()->user()->branch_id
+            );
+
+        } elseif ($request->branch_id) {
+
+            $query->where(
+                'branch_id',
+                $request->branch_id
+            );
+        }
+
+        $products = $query->get();
+
+        $stocksQuery = StockMovement::with([
+            'product.branch',
+            'user'
+        ]);
+
+        if (auth()->user()->role != 'owner') {
+
+            $stocksQuery->whereHas(
+                'product',
+                function ($q) {
+
+                    $q->where(
+                        'branch_id',
+                        auth()->user()->branch_id
+                    );
+
+                }
+            );
+
+        } else {
+
+            if ($request->branch_id) {
+
+                $stocksQuery->whereHas(
+                    'product',
+                    function ($q) use ($request) {
+
+                        $q->where(
+                            'branch_id',
+                            $request->branch_id
+                        );
+
+                    }
+                );
+
+            }
+
+        }
+
+        $stocks = $stocksQuery
+            ->latest()
+            ->paginate(20);
+
+        $branches = \App\Models\Branch::all();
+
+        return view('stocks.index', compact(
+            'products',
+            'stocks',
+            'branches'
+        ));
     }
 
     public function create()
@@ -41,13 +104,24 @@ class StockController extends Controller
             $request->product_id
         );
 
-        if($request->type == 'in'){
+        if ($request->type == 'in') {
 
             $product->increment(
                 'stock',
                 $request->qty
             );
 
+        }
+        ;
+        if (
+            $request->type == 'out'
+            &&
+            $product->stock < $request->qty
+        ) {
+            return back()->with(
+                'error',
+                'Stock tidak mencukupi'
+            );
         } else {
 
             $product->decrement(
@@ -58,10 +132,12 @@ class StockController extends Controller
 
         StockMovement::create([
             'product_id' => $request->product_id,
+            'user_id' => auth()->id(),
             'type' => $request->type,
             'qty' => $request->qty,
-            'description' => $request->description,
-            'user_id' => auth()->id(),
+            'description' => $request->type == 'in'
+                ? 'Stock Masuk Gudang'
+                : 'Stock Keluar Gudang',
         ]);
 
         return redirect()

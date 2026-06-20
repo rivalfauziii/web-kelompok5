@@ -123,7 +123,6 @@ function addToCart(id, name, price)
 function renderCart()
 {
     let html = '';
-
     let total = 0;
 
     cart.forEach(item => {
@@ -131,25 +130,51 @@ function renderCart()
         total += item.price * item.qty;
 
         html += `
-            <div class="flex justify-between mb-4 border-b pb-2">
+        <div class="bg-gray-50 p-3 rounded-xl mb-3">
+
+            <div class="flex justify-between items-start">
 
                 <div>
-
                     <h4 class="font-bold">${item.name}</h4>
 
-                    <p class="text-sm text-gray-500">
-                        ${item.qty} x Rp ${item.price}
+                    <p class="text-xs text-gray-500">
+                        Rp ${item.price.toLocaleString('id-ID')}
                     </p>
+                </div>
+
+                <button onclick="removeItem(${item.id})"
+                    class="text-red-500 text-sm">
+                    ✕
+                </button>
+
+            </div>
+
+            <div class="flex items-center justify-between mt-3">
+
+                <!-- QTY CONTROL -->
+                <div class="flex items-center gap-2">
+
+                    <button onclick="decreaseQty(${item.id})"
+                        class="w-8 h-8 bg-red-100 text-red-600 rounded-lg">
+                        -
+                    </button>
+
+                    <span class="font-bold">${item.qty}</span>
+
+                    <button onclick="increaseQty(${item.id})"
+                        class="w-8 h-8 bg-green-100 text-green-600 rounded-lg">
+                        +
+                    </button>
 
                 </div>
 
-                <div class="font-bold">
-
-                    Rp ${item.price * item.qty}
-
+                <div class="font-bold text-emerald-600">
+                    Rp ${(item.price * item.qty).toLocaleString('id-ID')}
                 </div>
 
             </div>
+
+        </div>
         `;
     });
 
@@ -157,6 +182,37 @@ function renderCart()
 
     document.getElementById('total').innerHTML =
         total.toLocaleString('id-ID');
+}
+
+function increaseQty(id)
+{
+    let item = cart.find(i => i.id === id);
+
+    if(item){
+        item.qty++;
+        renderCart();
+    }
+}
+
+function decreaseQty(id)
+{
+    let item = cart.find(i => i.id === id);
+
+    if(!item) return;
+
+    item.qty--;
+
+    if(item.qty <= 0){
+        cart = cart.filter(i => i.id !== id);
+    }
+
+    renderCart();
+}
+
+function removeItem(id)
+{
+    cart = cart.filter(i => i.id !== id);
+    renderCart();
 }
 
 function checkout()

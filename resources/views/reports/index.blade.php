@@ -28,24 +28,32 @@
                 @endif
 
                 <select name="report_type" class="rounded-xl border-zinc-300">
-                    <option value="sales" {{ $reportType == 'sales' ? 'selected' : '' }}>
-                        Laporan Penjualan
-                    </option>
 
-                    <option value="transaction" {{ $reportType == 'transaction' ? 'selected' : '' }}>
-                        Laporan Transaksi
-                    </option>
+                    @if(in_array(auth()->user()->role, ['owner', 'manager', 'supervisor']))
+                        <option value="sales" {{ $reportType == 'sales' ? 'selected' : '' }}>
+                            Laporan Penjualan
+                        </option>
+                    @endif
 
-                    <option value="stock" {{ $reportType == 'stock' ? 'selected' : '' }}>
-                        Laporan Stock
-                    </option>
+                    @if(in_array(auth()->user()->role, ['owner', 'manager', 'supervisor', 'cashier']))
+                        <option value="transaction" {{ $reportType == 'transaction' ? 'selected' : '' }}>
+                            Laporan Transaksi
+                        </option>
+                    @endif
+
+                    @if(in_array(auth()->user()->role, ['owner', 'manager', 'warehouse']))
+                        <option value="stock" {{ $reportType == 'stock' ? 'selected' : '' }}>
+                            Laporan Stock
+                        </option>
+                    @endif
+
                 </select>
 
                 <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl">
                     Filter
                 </button>
 
-                <a href="{{ route('reports.pdf', [
+                <a href="{{ route('reports.download.pdf', [
     'branch_id' => request('branch_id'),
     'report_type' => request('report_type')
 ]) }}" class="bg-red-500 text-white px-4 py-2 rounded-xl">
@@ -55,7 +63,10 @@
         </div>
 
         {{-- SALES --}}
-        @if($reportType == 'sales')
+@if(
+    in_array(auth()->user()->role, ['owner', 'manager', 'supervisor']) &&
+    $reportType == 'sales'
+)
 
             <div class="grid md:grid-cols-3 gap-6 mb-8">
 
@@ -85,7 +96,10 @@
         @endif
 
         {{-- TRANSACTION --}}
-        @if($reportType == 'transaction')
+@if(
+    in_array(auth()->user()->role, ['owner', 'manager', 'supervisor', 'cashier']) &&
+    $reportType == 'transaction'
+)
 
             <div class="bg-white rounded-2xl shadow overflow-hidden">
                 <div class="p-5 border-b">
@@ -122,7 +136,10 @@
         @endif
 
         {{-- STOCK --}}
-        @if($reportType == 'stock')
+@if(
+    in_array(auth()->user()->role, ['owner', 'manager', 'warehouse']) &&
+    $reportType == 'stock'
+)
 
             <div class="grid md:grid-cols-2 gap-6 mb-8">
 
